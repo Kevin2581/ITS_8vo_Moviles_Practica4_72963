@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'api_service.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env"); // Cargar variables de entorno
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
@@ -17,14 +17,134 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'ToDo List'),
+      home: const LoginScreen(), // Ahora inicia con el Login
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
+//PANTALLA DE LOGIN
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final Color blueColor = const Color(0xFF1D2A5B);
+  bool _obscurePassword = true;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  void _login() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, complete todos los campos'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } else {
+      // Ir a la app de tareas si los campos están completos
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MyHomePage(title: 'ToDo List'),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: blueColor,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'INICIO DE SESIÓN',
+                style: TextStyle(
+                  fontSize: 24,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 40),
+              TextField(
+                controller: _emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(color: Colors.white),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white70),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: const TextStyle(color: Colors.white),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      color: Colors.white70,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white70),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: blueColor,
+                  ),
+                  child: const Text('INICIAR SESIÓN'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ------------------------ PANTALLA PRINCIPAL DE TAREAS ------------------------
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -40,7 +160,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _loadTasks();
   }
 
-  // Cargar tareas desde la API
   Future<void> _loadTasks() async {
     try {
       final tasksFromApi = await ApiService.getTasks();
@@ -54,7 +173,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Navegar a la pantalla de tarea
   void _navigateToTaskScreen({int? index}) async {
     final result = await Navigator.push(
       context,
@@ -68,13 +186,11 @@ class _MyHomePageState extends State<MyHomePage> {
     if (result != null) {
       try {
         if (index != null) {
-          // Actualizar tarea existente
           await ApiService.updateTask(tasks[index]['id'], result);
         } else {
-          // Crear nueva tarea
           await ApiService.createTask(result);
         }
-        _loadTasks(); // Recargar tareas
+        _loadTasks();
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -83,11 +199,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Eliminar una tarea
   void _deleteTask(int index) async {
     try {
       await ApiService.deleteTask(tasks[index]['id']);
-      _loadTasks(); // Recargar tareas
+      _loadTasks();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -95,14 +210,13 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  // Marcar una tarea como completada
   void _toggleTaskCompletion(int index) async {
     try {
       await ApiService.toggleTaskCompletion(
         tasks[index]['id'],
         !tasks[index]['completada'],
       );
-      _loadTasks(); // Recargar tareas
+      _loadTasks();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
@@ -146,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   IconButton(
                     icon: const Icon(Icons.edit),
                     onPressed: () {
-                      _navigateToTaskScreen(index: index); // Editar tarea
+                      _navigateToTaskScreen(index: index);
                     },
                   ),
                   IconButton(
@@ -173,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _navigateToTaskScreen(); // Agregar nueva tarea
+          _navigateToTaskScreen();
         },
         tooltip: 'Agregar tarea',
         child: const Icon(Icons.add),
@@ -182,7 +296,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-// Pantalla para agregar/editar tareas
+// ------------------------ PANTALLA DE AGREGAR / EDITAR TAREA ------------------------
+
 class TaskScreen extends StatefulWidget {
   final Map<String, dynamic>? task;
 
@@ -231,7 +346,7 @@ class _TaskScreenState extends State<TaskScreen> {
                 labelText: 'Descripción',
                 hintText: 'Ingresa la descripción de la tarea',
               ),
-              maxLines: null, // TextArea de múltiples líneas
+              maxLines: null,
               keyboardType: TextInputType.multiline,
             ),
             CheckboxListTile(

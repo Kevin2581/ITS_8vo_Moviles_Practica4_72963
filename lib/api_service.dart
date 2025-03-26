@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class ApiService {
   static final String _apiUrl = dotenv.get('API_URL');
 
+
   // Obtener todas las tareas
   static Future<List<Map<String, dynamic>>> getTasks() async {
     final response = await http.get(Uri.parse('$_apiUrl/tareas'));
@@ -32,6 +33,7 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode(task),
     );
+
     if (response.statusCode == 200) {
       return Map<String, dynamic>.from(json.decode(response.body));
     } else {
