@@ -312,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 //pantalla de registro
-//
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
