@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-// Pantalla de Login
+// Pantalla vista de Login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB3D9FF), // azul pastel
+      backgroundColor: const Color(0xFFBDD9DB), // color de fondo
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -311,8 +311,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-class RegisterScreen extends StatefulWidget {
+//a
+//
+  class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override
@@ -357,7 +358,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFB3D9FF), // azul pastel
+      backgroundColor: const Color(0xFFBDD9DB), // color de fondo
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -417,17 +418,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Checkbox(
-                    value: _rememberMe,
-                    onChanged: (value) {
-                      setState(() => _rememberMe = value ?? false);
-                    },
-                  ),
-                  const Text("Guardar"),
-                ],
-              ),
 
               const SizedBox(height: 24),
 
