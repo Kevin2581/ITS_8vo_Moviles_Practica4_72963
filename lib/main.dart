@@ -311,9 +311,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-//a
+//pantalla de registro
 //
-  class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override
@@ -325,7 +325,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _rememberMe = false;
   bool _isObscure = true;
 
   void _register() async {
@@ -335,6 +334,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor completa todos los campos')),
+      );
+      return;
+    }
+
+    if (password.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La contraseña debe tener al menos 8 caracteres')),
       );
       return;
     }
@@ -416,9 +422,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-
               const SizedBox(height: 24),
 
               _isLoading
@@ -447,32 +450,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
-  Widget _buildRoundedTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    bool obscure = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      keyboardType: keyboardType,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding:
-        const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
 
 
 class TaskScreen extends StatefulWidget {
