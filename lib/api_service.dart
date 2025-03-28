@@ -1,9 +1,72 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ApiService {
   static final String _apiUrl = dotenv.get('API_URL');
+
+  static String? _jwtToken;
+
+  // Función para obtener el token desde SharedPreferences
+  static Future<String?> _getTokenFromSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('jwt_token');  // Recupera el token almacenado
+  }
+
+  // Login al backend y guarda el token JWT
+  static Future<String?> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$_apiUrl/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({'username': email, 'password': password}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      _jwtToken = data['token'];
+
+      // Guardar el token en SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('jwt_token', _jwtToken!);  // Guardar el token como una cadena
+
+      return _jwtToken; // Se retorna el token para que el main pueda validarlo
+    } else {
+      throw Exception('Login fallido: ${response.body}');
+    }
+  }
+
+  // Nuevo método para registrar un usuario (se utiliza el correo como username)
+  static Future<String?> register(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$_apiUrl/auth/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'username': email, // usamos el correo como username
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 201) { // 201: creado exitosamente
+      final data = json.decode(response.body);
+      _jwtToken = data['token'];
+      return _jwtToken;
+    } else {
+      throw Exception('Registro fallido: ${response.body}');
+    }
+  }
+
+  // Headers con JWT
+  static Future<Map<String, String>> _authHeaders() async {
+    String? token = await _getTokenFromSharedPreferences();  // Obtener el token de SharedPreferences
+
+    // Retorna el encabezado Authorization con el token si existe
+    return {
+      'Content-Type': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',  // Incluye el Bearer Token en cada solicitud
+    };
+  }
 
 
   // Obtener todas las tareas

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'api_service.dart';
 
+
+
 void main() async {
-  await dotenv.load(fileName: ".env");
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env"); // Cargar variables de entorno
   runApp(const MyApp());
 }
 
@@ -17,14 +20,17 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const LoginScreen(), // Ahora inicia con el Login
-      debugShowCheckedModeBanner: false,
+      initialRoute: '/register',
+      routes: {
+        '/register': (context) => const RegisterScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const MyHomePage(title: 'ToDo List'),
+      },
     );
   }
 }
 
-//PANTALLA DE LOGIN
-
+// Pantalla de Login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -33,118 +39,88 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final Color blueColor = const Color(0xFF1D2A5B);
-  bool _obscurePassword = true;
-
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  void _login() {
+  void _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, complete todos los campos'),
-          backgroundColor: Colors.redAccent,
-        ),
+        const SnackBar(content: Text('Por favor ingresa correo y contraseña')),
       );
-    } else {
-      // Ir a la app de tareas si los campos están completos
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const MyHomePage(title: 'ToDo List'),
-        ),
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Llamamos a la función real de login que devuelve un token
+      final token = await ApiService.login(email, password);
+      if (token != null) {
+        // Aquí podrías almacenar el token de forma segura (ej: secure_storage)
+        // Navegar a la pantalla principal
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MyHomePage(title: 'ToDo List'),
+          ),
+        );
+      } else {
+        throw 'Credenciales incorrectas';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
       );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: blueColor,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'INICIO DE SESIÓN',
-                style: TextStyle(
-                  fontSize: 24,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 40),
-              TextField(
-                controller: _emailController,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  labelStyle: TextStyle(color: Colors.white),
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  labelStyle: const TextStyle(color: Colors.white),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                      color: Colors.white70,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white70),
-                  ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: blueColor,
-                  ),
-                  child: const Text('INICIAR SESIÓN'),
-                ),
-              ),
-            ],
-          ),
+      appBar: AppBar(title: const Text('Iniciar sesión')),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Campo de correo
+            TextField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Correo'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            // Campo de contraseña
+            TextField(
+              controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'Contraseña'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 32),
+            // Botón de login
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+              onPressed: _login,
+              child: const Text('Iniciar sesión'),
+            ),
+          ],
         ),
       ),
     );
   }
 }
-
-// ------------------------ PANTALLA PRINCIPAL DE TAREAS ------------------------
+//app original
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
+
   final String title;
 
   @override
@@ -295,9 +271,177 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+//Pantalla de registro
 
-// ------------------------ PANTALLA DE AGREGAR / EDITAR TAREA ------------------------
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({Key? key}) : super(key: key);
 
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+  bool _rememberMe = false;
+
+  // Función para registrar al usuario
+  void _register() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor completa todos los campos')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Llamada al método register de ApiService
+      final token = await ApiService.register(email, password);
+      if (token != null) {
+        // Si el backend retorna el token, podemos navegar al login
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error en registro: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // Eliminamos el AppBar para un diseño a pantalla completa
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        // Fondo degradado
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFE0ECFF), // Ajusta estos colores a tu preferencia
+              Color(0xFFD2E3F3),
+            ],
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Título principal centrado
+                const Text(
+                  "Registrarme",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueAccent,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+
+                // Campo de correo
+                _buildRoundedTextField(
+                  controller: _emailController,
+                  label: "Correo",
+                  hint: "Ingresa tu correo",
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                // Campo de contraseña
+                _buildRoundedTextField(
+                  controller: _passwordController,
+                  label: "Contraseña",
+                  hint: "Ingresa tu contraseña",
+                  obscure: true,
+                ),
+                const SizedBox(height: 16),
+
+                // “Remember me”
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) {
+                        setState(() => _rememberMe = value ?? false);
+                      },
+                    ),
+                    const Text("Guardar"),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Botón de registro
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      'Registrarme',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Campo de texto con estilo redondeado
+  Widget _buildRoundedTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    bool obscure = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+// Pantalla para agregar/editar tareas
 class TaskScreen extends StatefulWidget {
   final Map<String, dynamic>? task;
 
@@ -383,3 +527,4 @@ class _TaskScreenState extends State<TaskScreen> {
     );
   }
 }
+
