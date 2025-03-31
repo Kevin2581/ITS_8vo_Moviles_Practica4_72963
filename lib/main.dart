@@ -27,6 +27,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 // Pantalla vista de Login
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,10 +45,18 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor ingresa correo y contraseña')),
+      );
+      return;
+    }
+
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa un correo válido')),
       );
       return;
     }
@@ -78,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFBDD9DB), // color de fondo
+      backgroundColor: const Color(0xFFBDD9DB),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -150,6 +159,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/register');
+                },
+                child: const Text(
+                  '¿No tienes cuenta? Regístrate',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -157,7 +179,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -311,7 +332,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-//pantalla de registro
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -330,10 +350,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _register() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Por favor completa todos los campos')),
+      );
+      return;
+    }
+
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa un correo válido')),
       );
       return;
     }
@@ -364,7 +392,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFBDD9DB), // color de fondo
+      backgroundColor: const Color(0xFFBDD9DB),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -376,8 +404,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 32),
-
-              // Campo de correo
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -393,10 +419,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Campo de contraseña
               TextField(
                 controller: _passwordController,
                 obscureText: _isObscure,
@@ -421,9 +444,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 24),
-
               _isLoading
                   ? const CircularProgressIndicator()
                   : SizedBox(
@@ -443,6 +464,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+                child: const Text(
+                  '¿Ya tienes cuenta? Inicia sesión',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -450,7 +484,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
 
 class TaskScreen extends StatefulWidget {
   final Map<String, dynamic>? task;
@@ -479,8 +512,7 @@ class _TaskScreenState extends State<TaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-      AppBar(title: Text(widget.task == null ? 'Agregar tarea' : 'Editar tarea')),
+      appBar: AppBar(title: Text(widget.task == null ? 'Agregar tarea' : 'Editar tarea')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
